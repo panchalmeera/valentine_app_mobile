@@ -17,14 +17,33 @@
  * under the License.
  */
 var app = {
+    // Application Constructor
     initialize: function() {
         this.bindEvents();
     },
+    // Bind Event Listeners
+    //
+    // Bind any events that are required on startup. Common events are:
+    // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
     },
+    // deviceready Event Handler
+    //
+    // The scope of 'this' is the event. In order to call the 'receivedEvent'
+    // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         var socket = io.connect('http://valentine-app.herokuapp.com');
+        $('body').on('click', 'img.swipeMe', function() {
+  			$.ajax({
+    			type: "POST",
+    			url: 'http://valentine-app.herokuapp.com/gift/'+this.id+'/vote',
+    			data: this.id,
+    			success: function(data) { console.log("ajax worked"); },
+    			error: function(data) {console.log("ajax error"); },
+    			dataType: 'json'
+			});
+		});
     	var mapData=[];
       	socket.on('gifts', function (data) {
       		mapData = data;
@@ -38,18 +57,8 @@ var app = {
     		};
     		var infoWindow = new google.maps.InfoWindow(), marker;
     		var map = new google.maps.Map(document.getElementById("geolocation"),mapOptions);
-    		var addSwipeTo = function(selector) {  
-         		$(selector).swipe("destroy");
-         		$(selector).swipe({
-            		//Generic swipe handler for all directions
-            		swipe:function(event, direction, distance, duration, fingerCount) {
-              			//$(this).text("You swiped " + direction );  
-              			alert("sdfsdf");
-            		},
-            		//Default is 75px, set to 0 for demo so any distance triggers swipe
-             		threshold:0
-          		});
-    		};
+    		
+  			
       		for(var i=0; i< mapData.length; i++){
       			marker = new google.maps.Marker({
             		position: new google.maps.LatLng(mapData[i].lat, mapData[i].lng),
@@ -59,15 +68,16 @@ var app = {
             		name:mapData[i].name
             		//label: mapData[i].name
           		});
-          		var infoWindowContent = 
-          		    '<a id="doSwipe">' +
-        				'<img src='+mapData[i].pic+'></img>' +
-        			'</a>';
+          		
           		google.maps.event.addListener(marker, 'click', (function(marker, i) {
+          			var infoWindowContent = 
+          		    '<a>' + '<h3>'+mapData[i].name+'</h3>'+
+        				'<img class="swipeMe" id='+mapData[i]._id+' style="border:2px solid black;height:200px;width:200px;" src='+mapData[i].pic+'></img>' +
+        			'</a>'+
+        			'<h4>'+mapData[i].upvotes+'</h4>';
             		return function() {
                 		infoWindow.setContent(infoWindowContent);
                 		infoWindow.open(map, marker);
-                		addSwipeTo(".doSwipe");
             		}
         		})(marker, i));
       		}
